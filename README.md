@@ -1,4 +1,3 @@
-minnpost-2012-my-elections
-==========================
+# 2012 Ballot Explorer
 
 A ballot explorer for the 2012 elections
