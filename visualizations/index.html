@@ -19,13 +19,14 @@
 <meta name="viewport" content="width=device-width, initial-scale=1"></meta>
 
 
-  <link type="text/css" rel="stylesheet" media="all" href="http://www.minnpost.com/sites/default/files/css/css_1af95ed06426f02dad6a0af70bc40c82.css" />
-<link type="text/css" rel="stylesheet" media="screen" href="http://www.minnpost.com/sites/default/files/css/css_48ba1abf99d39131a63bf3567de0caea.css" />
-<link type="text/css" rel="stylesheet" media="print" href="http://www.minnpost.com/sites/default/files/css/css_0edbb2ed619015560d20bf2977629f75.css" />
+  <link type="text/css" rel="stylesheet" media="all" href="http://www.minnpost.com/sites/default/files/css/css_c4e767d2c0649831822044ff7e6893e5.css" />
+<link type="text/css" rel="stylesheet" media="screen" href="http://www.minnpost.com/sites/default/files/css/css_6b2b28228f4e06a47e93d96b2abfeb4b.css" />
+<link type="text/css" rel="stylesheet" media="print" href="http://www.minnpost.com/sites/default/files/css/css_93f63f4f94c282fd52e692fdfd1851a4.css" />
   <!--[if IE]>
-      <link rel="stylesheet" href="http://www.minnpost.com/sites/default/themes/derma/inc/css/ie.css?p" type="text/css">
+      <link rel="stylesheet" href="http://www.minnpost.com/sites/default/themes/derma/inc/css/ie.css?8" type="text/css">
   <![endif]-->
-    <script type="text/javascript" src="http://www.minnpost.com/sites/default/files/js/js_d0c2732abaef4ea51f9c008e28c6097c.js"></script>
+    <script type="text/javascript" src="http://www.minnpost.com/sites/default/files/js/js_f2e939afce8e5c0712d11422afe6b703.js"></script>
+    
 
 </head>
 <body class="not-front logged-in page-node node-type-article one-sidebar sidebar-right admin-nw admin-vertical admin-df  section-data section-data-id-2012 section-data-id-2012-id-05 section-data-id-2012-id-05-how-we-built-legislative-bill-explorer one-sidebar sidebar-right">
@@ -95,6 +96,9 @@
     <![endif]-->
     
     <div id="minnpost-2012-my-elections">
+      <div class="messages notice hide"></div>
+      <div class="messages error hide"></div>
+      
       <div class="section welcome-section">
         <noscript>
           <p>This application requires Javascript which is used to make your web browser more interactive.  If this message does not go away, please consider enabling Javascript.  Here are <a href="http://www.enable-javascript.com/" target="_blank">instructions on how to enable JavaScript in your web browser</a>.</p>
@@ -104,7 +108,7 @@
       </div>
       
       <div class="section search-section hide">
-        <form>
+        <form id="search-form">
           <input type="text" id="address-input" class="form-text" title="Enter your address" />
         </form>
       </div>
@@ -140,11 +144,19 @@
       (function($, w, undefined) {
         // View for searching
         var SearchView = Backbone.View.extend({
+          el: '.search-section',
+          
+          events: {
+            'submit #search-form': 'submitSearch'
+          },
+          
           initialize: function() {
+            this.$addressInput = $('#address-input');
+            
             // Handle text input placeholder
-            $('#address-input').addClass('placeholder')
-              .val($('#address-input').attr('title'));
-            $('#address-input').blur(function(e) {
+            this.$addressInput.addClass('placeholder')
+              .val(this.$addressInput.attr('title'));
+            this.$addressInput.blur(function(e) {
               var $this = $(this);
               
               if ($this.val() === $this.attr('title')) {
@@ -155,11 +167,11 @@
                   .val($this.attr('title'));
               }
             });
-            $('#address-input').focus(function(e) {
+            this.$addressInput.focus(function(e) {
               var $this = $(this);
               
               $this.removeClass('placeholder');
-              if ($this.val() == $this.attr('title')) {
+              if ($this.val() === $this.attr('title')) {
                 $this.val('');
               }
             });
@@ -167,7 +179,21 @@
           
           show: function() {
             $('.section').slideUp();
-            $('.search-section').slideDown();
+            this.$el.slideDown();
+          },
+          
+          submitSearch: function(e) {
+            e.preventDefault();
+            
+            if (this.$addressInput.val() === this.$addressInput.attr('title') ||
+              this.$addressInput.val() === '') {
+              this.error('Not valid address')
+            }
+          },
+          
+          error: function(message) {
+            $('.messages.error').html(message).slideDown().delay(3000).slideUp();
+            
           }
         });
         
