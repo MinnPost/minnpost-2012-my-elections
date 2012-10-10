@@ -96,6 +96,7 @@
     <![endif]-->
     
     <div id="minnpost-2012-my-elections">
+      <div class="messages loading hide">Loading...</div>
       <div class="messages notice hide"></div>
       <div class="messages error hide"></div>
       
@@ -104,7 +105,7 @@
           <p>This application requires Javascript which is used to make your web browser more interactive.  If this message does not go away, please consider enabling Javascript.  Here are <a href="http://www.enable-javascript.com/" target="_blank">instructions on how to enable JavaScript in your web browser</a>.</p>
         </noscript>
         
-        <p class="loading">Loading...</p>
+        <p class="welcome-loading">Loading...</p>
       </div>
       
       <div class="section search-section hide">
@@ -114,14 +115,34 @@
       </div>
       
       <div class="section results-section hide">
+        <a class="goto-search" href="#search">Go back to address search.</a>
         
+        <div class="location-results-container"></div>
+        <div class="race-details-container"></div>
       </div>
       
       <p class="footnote"></p>
     </div>
     
     <!-- Templates to be used in client side processing. -->
-    <script id="template-" type="text/template">
+    <script id="template-location-results" type="text/template">
+      <div class="location-results">
+        <h3>Results</h3>
+        <% if (address) { %>
+          <div class="display-address"><%= address %></div>
+        <% } %>
+        <div class="display-lat-lon"><%= lat %>, <%= lon %></div>
+        <ul class="boundary-list">
+        </ul>
+      </div>
+    </script>
+    
+    <script id="template-boundary-results" type="text/template">
+      <% for (var i in boundaries) { %>
+        <li><a href="#location/<%= lat %>,<%= lon %>/" data-boundary="">
+          <%= boundaries[i].kind %>
+        </a></li>
+      <% } %>
     </script>
   
     <!-- jQuery if it is not there and jQueryCustom for Backbone --><!-- jQuery -->
@@ -144,13 +165,19 @@
       (function($, w, undefined) {
         // View for searching
         var SearchView = Backbone.View.extend({
+          // Various properties
+          geocodeQuery: 'http://open.mapquestapi.com/nominatim/v1/search?format=json&json_callback=?&countrycodes=us&limit=1&q=',
+          mnBounds: new L.LatLngBounds(
+            new L.LatLng(43.499356, -97.239209), 
+            new L.LatLng(49.384358, -89.489226)
+          ),
           el: '.search-section',
-          
           events: {
             'submit #search-form': 'submitSearch'
           },
           
           initialize: function() {
+            this.router = this.options.router;
             this.$addressInput = $('#address-input');
             
             // Handle text input placeholder
@@ -187,13 +214,116 @@
             
             if (this.$addressInput.val() === this.$addressInput.attr('title') ||
               this.$addressInput.val() === '') {
-              this.error('Not valid address')
+              this.router.error('Not valid address')
+            }
+            else {
+              this.geocodeAddress(this.$addressInput.val());
             }
           },
           
-          error: function(message) {
-            $('.messages.error').html(message).slideDown().delay(3000).slideUp();
+          geocodeAddress: function(address) {
+            var thisView = this;
             
+            this.router.loading('Looking for your address...');
+            $.getJSON(this.geocodeQuery + encodeURI(address), function(value) {
+              thisView.router.doneLoading();
+              
+              // Use first response
+              value = value[0];
+              if (_.isUndefined(value)) {
+                thisView.router.error('We were unable turn your search terms, "' + address + '", into a geographical location.  Please be more specific, such as including ZIP code.');
+              }
+              // Check we are still mostly in Minnesota
+              else if (!thisView.mnBounds.contains(new L.LatLng(value.lat, value.lon))) {
+                thisView.router.error('Sorry, but what you are looking for is outside of Minnesota.');
+              }
+              else {
+                thisView.geocodeResults = value;
+                thisView.addressFound(value.lat, value.lon);
+              }
+            });
+          },
+          
+          addressFound: function(lat, lon) {
+            this.router.navigate('/location/' + lat + ',' + lon, { trigger: true });
+          }
+        });
+        
+        // View for results
+        var ResultsView = Backbone.View.extend({
+          // Various properties
+          mnBounds: new L.LatLngBounds(
+            new L.LatLng(43.499356, -97.239209), 
+            new L.LatLng(49.384358, -89.489226)
+          ),
+          boundaryQuery: 'http://boundaries.minnpost.com/1.0/boundary/?sets=%sets%&contains=%lat%,%lon%&callback=?',
+          boundarySets: 'congressional-districts-2012,counties-2010,county-commissioner-districts-2012,district-courts-2012,state-house-districts-2012,states-2011,state-senate-districts-2012',
+          el: '.results-section',
+          events: {
+          },
+          
+          initialize: function() {
+            this.router = this.options.router;
+          },
+          
+          show: function(location, race, open) {
+            this.race = race;
+
+            // Open only if there is change
+            if (open) {
+              $('.section').slideUp();
+              this.$el.slideDown();
+            }
+            
+            // Check if different location
+            if (location.split(',')[0] != this.lat &&
+              location.split(',')[1] != this.lon) {
+              this.lat = location.split(',')[0];
+              this.lon = location.split(',')[1];
+              
+              this.showLocation();
+              this.findBoundaries();
+            }
+            else {
+              this.showRace();
+            }
+          },
+          
+          findBoundaries: function() {
+            var thisView = this;
+            var request = this.boundaryQuery;
+            request = request.replace('%sets%', encodeURI(this.boundarySets));
+            request = request.replace('%lat%', encodeURI(this.lat));
+            request = request.replace('%lon%', encodeURI(this.lon));
+
+            this.router.loading('Looking for your districts...');
+            $.getJSON(request, function(value) {
+              thisView.router.doneLoading();
+              
+              if (_.size(value.objects) > 0) {
+                $('.boundary-list').html(
+                  _.template($('#template-boundary-results').html(), {
+                    lat: thisView.lat,
+                    lon: thisView.lon,
+                    boundaries: value.objects
+                  }));
+                
+              }
+            });
+          },
+          
+          showLocation: function() {
+            $('.location-results-container').html(
+              _.template($('#template-location-results').html(), {
+                lat: this.lat,
+                lon: this.lon,
+                address: (!_.isUndefined(this.router.searchView.geocodeResults)) ?
+                  this.router.searchView.geocodeResults.display_name : undefined
+              }));
+          },
+          
+          showRace: function() {
+          
           }
         });
         
@@ -208,18 +338,35 @@
         
           initialize: function() {
             this.searchView = new SearchView({ router: this });
+            this.resultsView = new ResultsView({ router: this });
           },
         
           defaultRoute: function() {
-            this.navigate('search');
-            this.search();
+            this.navigate('/search', { trigger: true, replace: true });
           },
         
           search: function() {
+            this.open = 'search';
             this.searchView.show()
           },
         
           location: function(location, race) {
+            var openChange = (this.open != 'location');
+            this.open = 'location';
+            this.resultsView.show(location, race, openChange);
+          },
+          
+          error: function(message) {
+            $('.messages.error').html(message).slideDown().delay(3000).slideUp();
+          },
+          
+          loading: function(message) {
+            message = (_.isUndefined(message)) ? 'Loading...' : message;
+            $('.messages.loading').html(message).slideDown();
+          },
+          
+          doneLoading: function(message) {
+            $('.messages.loading').slideUp();
           }
         });
           
