@@ -139,7 +139,7 @@
     
     <script id="template-boundary-results" type="text/template">
       <% for (var i in boundaries) { %>
-        <li><a href="#location/<%= lat %>,<%= lon %>/" data-boundary="">
+        <li><a href="#location/<%= lat %>,<%= lon %>/<%= boundaries[i].slug %>" data-boundary="<%= boundaries[i].slug %>">
           <%= boundaries[i].kind %>
         </a></li>
       <% } %>
@@ -299,16 +299,8 @@
             this.router.loading('Looking for your districts...');
             $.getJSON(request, function(value) {
               thisView.router.doneLoading();
-              
-              if (_.size(value.objects) > 0) {
-                $('.boundary-list').html(
-                  _.template($('#template-boundary-results').html(), {
-                    lat: thisView.lat,
-                    lon: thisView.lon,
-                    boundaries: value.objects
-                  }));
-                
-              }
+              thisView.boundaries = value.objects;
+              thisView.showBoundaries();
             });
           },
           
@@ -319,6 +311,15 @@
                 lon: this.lon,
                 address: (!_.isUndefined(this.router.searchView.geocodeResults)) ?
                   this.router.searchView.geocodeResults.display_name : undefined
+              }));
+          },
+          
+          showBoundaries: function() {
+            $('.boundary-list').html(
+              _.template($('#template-boundary-results').html(), {
+                lat: this.lat,
+                lon: this.lon,
+                boundaries: this.boundaries
               }));
           },
           
