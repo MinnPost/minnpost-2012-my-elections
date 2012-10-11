@@ -256,14 +256,19 @@
             new L.LatLng(43.499356, -97.239209), 
             new L.LatLng(49.384358, -89.489226)
           ),
-          boundaryQuery: 'http://boundaries.minnpost.com/1.0/boundary/?sets=%sets%&contains=%lat%,%lon%&callback=?',
+          boundaryQuery: 'http://boundaries.minnpost.com/1.0/boundary/?sets=%sets%&contains=%lat%,%lon%&callback=%callback%',
           boundarySets: 'congressional-districts-2012,counties-2010,county-commissioner-districts-2012,district-courts-2012,state-house-districts-2012,states-2011,state-senate-districts-2012',
+          electionQuery: 'elections/api/election_boundary_search',
           el: '.results-section',
           events: {
           },
           
           initialize: function() {
             this.router = this.options.router;
+            
+            // Determine election query
+            this.electionQuery = (w.location.hostname === 'localhost') ?
+              '/minnpost/minnpostcom/' + this.electionQuery : '/' + this.electionQuery;
           },
           
           show: function(location, race, open) {
@@ -295,12 +300,21 @@
             request = request.replace('%sets%', encodeURI(this.boundarySets));
             request = request.replace('%lat%', encodeURI(this.lat));
             request = request.replace('%lon%', encodeURI(this.lon));
+            request = request.replace('%callback%', encodeURI('boundaryCallback'));
 
-            this.router.loading('Looking for your districts...');
-            $.getJSON(request, function(value) {
+            // Utilize a manual JSONP call so that the boundary
+            // service can cache the results as well as the browser.
+            w.boundaryCallback = function(value) {
               thisView.router.doneLoading();
               thisView.boundaries = value.objects;
               thisView.showBoundaries();
+            };
+
+            this.router.loading('Looking for your districts...');
+            $.ajax({
+              url: request,
+              dataType: 'script',
+              cache: true
             });
           },
           
