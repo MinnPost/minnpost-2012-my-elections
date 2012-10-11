@@ -118,6 +118,7 @@
         <a class="goto-search" href="#search">Go back to address search.</a>
         
         <div class="location-results-container"></div>
+        <div class="election-list-container"></div>
         <div class="race-details-container"></div>
       </div>
       
@@ -126,21 +127,17 @@
     
     <!-- Templates to be used in client side processing. -->
     <script id="template-location-results" type="text/template">
-      <div class="location-results">
-        <h3>Results</h3>
-        <% if (address) { %>
-          <div class="display-address"><%= address %></div>
-        <% } %>
-        <div class="display-lat-lon"><%= lat %>, <%= lon %></div>
-        <ul class="boundary-list">
-        </ul>
-      </div>
+      <h3>Results</h3>
+      <% if (address) { %>
+        <div class="display-address"><%= address %></div>
+      <% } %>
+      <div class="display-lat-lon"><%= lat %>, <%= lon %></div>
     </script>
     
-    <script id="template-boundary-results" type="text/template">
-      <% for (var i in boundaries) { %>
-        <li><a href="#location/<%= lat %>,<%= lon %>/<%= boundaries[i].slug %>" data-boundary="<%= boundaries[i].slug %>">
-          <%= boundaries[i].kind %>
+    <script id="template-election-list" type="text/template">
+      <% for (var i in elections) { %>
+        <li><a href="#location/<%= lat %>,<%= lon %>/<%= elections[i].nid %>" data-boundary="<%= elections[i].boundary %>" data-nid="<%= elections[i].nid %>">
+          <%= elections[i].title %>
         </a></li>
       <% } %>
     </script>
@@ -258,7 +255,7 @@
           ),
           boundaryQuery: 'http://boundaries.minnpost.com/1.0/boundary/?sets=%sets%&contains=%lat%,%lon%&callback=%callback%',
           boundarySets: 'congressional-districts-2012,counties-2010,county-commissioner-districts-2012,district-courts-2012,state-house-districts-2012,states-2011,state-senate-districts-2012',
-          electionQuery: 'elections/api/election_boundary_search',
+          electionQuery: 'elections/api/election_boundary_search/%slugs%',
           el: '.results-section',
           events: {
           },
@@ -307,7 +304,7 @@
             w.boundaryCallback = function(value) {
               thisView.router.doneLoading();
               thisView.boundaries = value.objects;
-              thisView.showBoundaries();
+              thisView.findElections();
             };
 
             this.router.loading('Looking for your districts...');
@@ -315,6 +312,23 @@
               url: request,
               dataType: 'script',
               cache: true
+            });
+          },
+          
+          findElections: function() {
+            var thisView = this;
+            var slugs = [];
+            var request = '';
+            
+            // Make boundary query
+            slugs = _.pluck(this.boundaries, 'slug');
+            request = this.electionQuery.replace('%slugs%', encodeURI(slugs.join(',')));
+          
+            this.router.loading('Looking for your elections...');
+            $.getJSON(request, function(elections) {
+              thisView.router.doneLoading();
+              thisView.elections = _.pluck(elections.nodes, 'node');
+              thisView.showElections();
             });
           },
           
@@ -328,16 +342,16 @@
               }));
           },
           
-          showBoundaries: function() {
-            $('.boundary-list').html(
-              _.template($('#template-boundary-results').html(), {
+          showElections: function() {
+            $('.election-list-container').html(
+              _.template($('#template-election-list').html(), {
                 lat: this.lat,
                 lon: this.lon,
-                boundaries: this.boundaries
+                elections: this.elections
               }));
           },
           
-          showRace: function() {
+          showElection: function() {
           
           }
         });
