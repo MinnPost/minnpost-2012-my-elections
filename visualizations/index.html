@@ -86,6 +86,16 @@
         color: #999999;
       }
       
+      .election-list-wrapper {
+        float: left;
+        width: 50%;
+      }
+      #election-map {
+        float: right;
+        width: 50%;
+        height: 400px;
+      }
+      
     </style>
     
     <!--[if lte IE 8]>
@@ -118,7 +128,12 @@
         <a class="goto-search" href="#search">Go back to address search.</a>
         
         <div class="location-results-container"></div>
-        <div class="election-list-container"></div>
+        <div class="clear-block">
+          <div class="election-list-wrapper">
+            <div class="election-list-container"></div>
+          </div>
+          <div class="map" id="election-map"></div>
+        </div>
         <div class="race-details-container"></div>
       </div>
       
@@ -256,6 +271,25 @@
           boundaryQuery: 'http://boundaries.minnpost.com/1.0/boundary/?sets=%sets%&contains=%lat%,%lon%&callback=%callback%',
           boundarySets: 'congressional-districts-2012,counties-2010,county-commissioner-districts-2012,district-courts-2012,state-house-districts-2012,states-2011,state-senate-districts-2012',
           electionQuery: 'elections/api/election_boundary_search/%slugs%',
+          mapOptions: {
+            minZoom: 4,
+            maxZoom: 18,
+            attributionControl: false
+          },
+          mapCenter: new L.LatLng(46.49839225859763, -93.6474609375),
+          mapBaseTiles: new L.TileLayer(
+            'http://{s}.tile.stamen.com/toner-lite/{z}/{x}/{y}.jpg', 
+            { subdomains: ['a', 'b', 'c', 'd'] }
+          ),
+          mapHighlightStyle: {
+            'color': '#801019',
+            'weight': 3,
+            'opacity': 0.9,
+            'fill': true,
+            'fillColor': '#801019',
+            'fillOpacity': 0.5
+          },
+          
           el: '.results-section',
           events: {
           },
@@ -277,17 +311,21 @@
               this.$el.slideDown();
             }
             
+            // Handle map
+            this.showMap();
+            
             // Check if different location
             if (location.split(',')[0] != this.lat &&
               location.split(',')[1] != this.lon) {
               this.lat = location.split(',')[0];
               this.lon = location.split(',')[1];
               
+              this.updateCenterMap();
               this.showLocation();
               this.findBoundaries();
             }
             else {
-              this.showRace();
+              this.showElection();
             }
           },
           
@@ -329,6 +367,7 @@
               thisView.router.doneLoading();
               thisView.elections = _.pluck(elections.nodes, 'node');
               thisView.showElections();
+              thisView.showElection();
             });
           },
           
@@ -352,7 +391,30 @@
           },
           
           showElection: function() {
+            // Don't do anything if there is no race selected.
+            if (!this.race) {
+              return;
+            }
           
+          },
+          
+          showMap: function() {
+            if (_.isUndefined(this.map)) {
+              this.map = new L.Map('election-map', this.mapOptions)
+                .addLayer(this.mapBaseTiles)
+                .setView(this.mapCenter, 6);
+            }
+            this.map.invalidateSize();
+          },
+          
+          updateCenterMap: function() {
+            if (_.isObject(this.marker)) {
+              this.marker.setLatLng(new L.LatLng(this.lat, this.lon));
+            }
+            else {
+              this.marker = new L.Marker(new L.LatLng(this.lat, this.lon));
+              this.map.addLayer(this.marker);
+            }
           }
         });
         
