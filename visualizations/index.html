@@ -105,6 +105,9 @@
       #address-input.placeholder {
         color: #999999;
       }
+      #search-submit {
+        float: right;
+      }
       
       .goto-search {
         display: block;
@@ -146,7 +149,11 @@
         padding: 0;
       }
       .election-list-container ul li a {
-        margin: 0 .25em;
+        display: block;
+        padding: 0 .25em;
+      }
+      .election-list-container ul li a.active {
+        background-color: #EBEBEB;
       }
       
       .list-wrapper .footnote {
@@ -236,9 +243,17 @@
       </div>
       
       <div class="section search-section hide">
-        <form id="search-form">
-          <input type="text" id="address-input" class="form-text" title="Enter your address" />
+        <h3>Search for a place in Minnesota to see what is on the ballot</h3>
+        <form id="search-form" class="clear-block">
+          <input type="text" id="address-input" class="form-text" title="Try entering your address" />
+          <input type="submit" id="search-submit" class="form-submit" title="Search" value="Search" />
         </form>
+        
+        <h4>Or try out these places:</h4>
+        <ul>
+          <li><a href="#location/1,1">The State Capitol</a></li>
+          <li><a href="#location/1,1">Duluth, MN</a></li>
+        </ul>
       </div>
       
       <div class="section results-section hide">
@@ -350,6 +365,8 @@
           show: function() {
             $('.section').slideUp();
             this.$el.slideDown();
+            this.$addressInput.blur();
+            this.$addressInput.focus();
           },
           
           submitSearch: function(e) {
@@ -454,13 +471,19 @@
               this.lon = location.split(',')[1];
               
               this.resetMap();
+              this.resetElectionDetails();
+              this.resetElections();
+              
               this.updateCenterMap();
               this.showLocation();
-              this.resetElections();
               this.findBoundaries();
             }
-            else {
+            else if (!_.isUndefined(this.race)) {
               this.showElection();
+            }
+            else {
+              this.resetMap();
+              this.resetElectionDetails();
             }
           },
           
@@ -529,6 +552,11 @@
             $('.election-list-container').html('');
           },
           
+          resetElectionDetails: function() {
+            $('.race-details-container').html('');
+            $('.election-list-container ul li a').removeClass('active');
+          },
+          
           showElection: function() {
             var thisView = this;
             
@@ -558,6 +586,10 @@
             this.mapHighlight.setStyle(this.mapHighlightStyle);
             this.map.addLayer(this.mapHighlight);
             this.map.fitBounds(this.mapHighlight.getBounds());
+            
+            // Highlight list
+            $('.election-list-container ul li a').removeClass('active');
+            $('.election-list-container ul li a[data-nid=' + this.race + ']').addClass('active');
             
             // Show election
             var request = this.basePath + this.electionDetailsQuery.replace('%id%', encodeURI(e.nid));
