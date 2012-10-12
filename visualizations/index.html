@@ -61,12 +61,22 @@
       }
       
       .message-container {
-        min-height: 4em;
-        padding: .25em;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        width: 100%;
+        background-color: #FFFFFF;
       }
-      .message-container .messages {
+      .message-container .app-messages span {
+        display: block;
+        padding: .25em .5em;
+        text-align: center;
         font-size: .75em;
-        margin: 0 0 .5em 0;
+        border-bottom: 1px solid #222222;
+      }
+      .message-container .app-messages span.error {
+        color: red;
       }
       
       .welcome-section {
@@ -95,13 +105,47 @@
         color: #999999;
       }
       
+      .goto-search {
+        display: block;
+        margin-bottom: 1em;
+      }
+      
+      .display-address,
+      .display-lat-lon {
+        color: #999999;
+      }
+      
       .election-list-wrapper {
         float: left;
         width: 50%;
       }
-      #election-map {
+      .map-wrapper {
         float: right;
         width: 50%;
+      }
+      
+      .election-list-container ul {
+        list-style: none;
+        margin: 1em 0 0 0;
+        padding: 0;
+      }
+      .election-list-container ul li {
+        width: 50%;
+        float: left;
+        list-style: none;
+        margin: 0;
+        padding: 0;
+      }
+      .election-list-container ul li a {
+        margin: 0 .25em;
+      }
+      
+      .election-list-wrapper .footnote {
+        margin-top: 2em;
+      }
+      
+      #election-map {
+        border: 1px solid #BCBCBC;
         height: 400px;
       }
       
@@ -129,9 +173,7 @@
     
     <div id="minnpost-2012-my-elections">
       <div class="message-container">
-        <div class="messages loading hide">Loading...</div>
-        <div class="messages notice hide"></div>
-        <div class="messages error hide"></div>
+        <div class="app-messages"></div>
       </div>
       
       <div class="section welcome-section">
@@ -151,12 +193,16 @@
       <div class="section results-section hide">
         <a class="goto-search" href="#search">Go back to address search.</a>
         
-        <div class="location-results-container"></div>
         <div class="clear-block">
           <div class="election-list-wrapper">
-            <div class="election-list-container"></div>
+            <div class="location-results-container"></div>
+            <div class="election-list-container clear-block"></div>
+            <p class="footnote">Click on race to see details and show the district on the map.</p>
           </div>
-          <div class="map" id="election-map"></div>
+          
+          <div class="map-wrapper">
+            <div class="map" id="election-map"></div>
+          </div>
         </div>
         <div class="race-details-container"></div>
       </div>
@@ -168,17 +214,19 @@
     <script id="template-location-results" type="text/template">
       <h3>Results</h3>
       <% if (address) { %>
-        <div class="display-address"><%= address %></div>
+        <div class="display-address">Address: <%= address %></div>
       <% } %>
-      <div class="display-lat-lon"><%= lat %>, <%= lon %></div>
+      <div class="display-lat-lon">Location: <%= lat %>, <%= lon %></div>
     </script>
     
     <script id="template-election-list" type="text/template">
-      <% for (var i in elections) { %>
-        <li><a href="#location/<%= lat %>,<%= lon %>/<%= elections[i].nid %>" data-boundary="<%= elections[i].boundary %>" data-nid="<%= elections[i].nid %>">
-          <%= elections[i].title %>
-        </a></li>
-      <% } %>
+      <ul>
+        <% for (var i in elections) { %>
+          <li><a href="#location/<%= lat %>,<%= lon %>/<%= elections[i].nid %>" data-boundary="<%= elections[i].boundary %>" data-nid="<%= elections[i].nid %>">
+            <%= elections[i].title %>
+          </a></li>
+        <% } %>
+      </ul>
     </script>
   
     <!-- jQuery if it is not there and jQueryCustom for Backbone --><!-- jQuery -->
@@ -260,18 +308,20 @@
           geocodeAddress: function(address) {
             var thisView = this;
             
-            this.router.loading('Looking for your address...');
+            this.router.message('Looking for your address.');
             $.getJSON(this.geocodeQuery + encodeURI(address), function(value) {
-              thisView.router.doneLoading();
+              thisView.router.removeMessage('Looking for your address.');
               
               // Use first response
               value = value[0];
               if (_.isUndefined(value)) {
-                thisView.router.error('We were unable turn your search terms, "' + address + '", into a geographical location.  Please be more specific, such as including ZIP code.');
+                var message = 'We were unable turn your search terms, "' + address + '", into a geographical location.  Please be more specific, such as including ZIP code.';
+                thisView.router.message(message, 'error');
               }
               // Check we are still mostly in Minnesota
               else if (!thisView.mnBounds.contains(new L.LatLng(value.lat, value.lon))) {
-                thisView.router.error('Sorry, but what you are looking for is outside of Minnesota.');
+                var message = 'Sorry, but what you are looking for is outside of Minnesota.';
+                thisView.router.message(message, 'error');
               }
               else {
                 thisView.geocodeResults = value;
@@ -365,12 +415,12 @@
             // Utilize a manual JSONP call so that the boundary
             // service can cache the results as well as the browser.
             w.boundaryCallback = function(value) {
-              thisView.router.doneLoading();
               thisView.boundaries = value.objects;
               thisView.findElections();
+              thisView.router.removeMessage('Looking for your districts.');
             };
 
-            this.router.loading('Looking for your districts...');
+            this.router.message('Looking for your districts.');
             $.ajax({
               url: request,
               dataType: 'script',
@@ -387,9 +437,9 @@
             slugs = _.pluck(this.boundaries, 'slug');
             request = this.basePath + this.electionQuery.replace('%slugs%', encodeURI(slugs.join(',')));
           
-            this.router.loading('Looking for your elections...');
+            this.router.message('Looking for your elections.');
             $.getJSON(request, function(elections) {
-              thisView.router.doneLoading();
+              thisView.router.removeMessage('Looking for your elections.');
               thisView.elections = _.pluck(elections.nodes, 'node');
               thisView.showElections();
               thisView.showElection();
@@ -499,6 +549,7 @@
           initialize: function() {
             this.searchView = new SearchView({ router: this });
             this.resultsView = new ResultsView({ router: this });
+            this.messages = [];
           },
         
           defaultRoute: function() {
@@ -520,13 +571,19 @@
             $('.messages.error').html(message).fadeIn().delay(3000).slideUp();
           },
           
-          loading: function(message) {
-            message = (_.isUndefined(message)) ? 'Loading...' : message;
-            $('.messages.loading').html(message).fadeIn();
+          message: function(message, type) {
+            type = (_.isUndefined(type)) ? 'loading' : type;
+            this.messages.push(message);
+            var index = _.indexOf(this.messages, message);
+            $('<span>').attr('data-id', index).addClass(type).html(message + ' ').appendTo('.app-messages');
           },
           
-          doneLoading: function(message) {
-            $('.messages.loading').slideUp();
+          removeMessage: function(message, type) {
+            type = (_.isUndefined(type)) ? 'loading' : type;
+            var index = _.indexOf(this.messages, message);
+            $('.app-messages span[data-id=' + index +']').fadeOut(function() {
+              $(this).remove();
+            });
           }
         });
         
@@ -547,7 +604,7 @@
             
             // The structure of two node reference is really hard to deal with on a CSS, and JS
             // level, so let's put them together.  This is really hacky.
-            $('<div>').addClass('candidate-container').insertBefore('.field-field-elections-district');
+            $('<div>').addClass('candidate-container').prependTo('.node-type-elections_election .fieldlayout-region-body-detail');
             $('.field-field-elections-incumbents > .field-label')
               .prependTo('.field-field-elections-incumbents > .field-items > .field-item:first-child');
             $('.field-field-elections-candidates > .field-label')
