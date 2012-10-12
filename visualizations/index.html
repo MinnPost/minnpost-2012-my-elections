@@ -117,9 +117,16 @@
         font-size: .75em;
       }
       
-      .election-list-wrapper {
+      .list-block {
+        margin-bottom: 2em;
+      }
+      
+      .list-wrapper {
         float: left;
         width: 50%;
+      }
+      .list-wrapper-inner {
+        margin-right: 1em;
       }
       .map-wrapper {
         float: right;
@@ -142,13 +149,28 @@
         margin: 0 .25em;
       }
       
-      .election-list-wrapper .footnote {
+      .list-wrapper .footnote {
         margin-top: 2em;
       }
       
       #election-map {
-        border: 1px solid #BCBCBC;
+        border: 1px solid #EBEBEB;
         height: 400px;
+      }
+      
+      .race-details-container .votesaver-ajax-title.node-title {
+        font-family: NimbusSanNovConD-Bol,Helvetica,Arial,Geneva,sans-serif;
+        font-weight: normal;
+        font-style: normal;
+        font-size: 215.4%;
+        line-height: 1.15em;
+        margin-bottom: .5em;
+        text-align: center;
+      }
+      
+      #minnpost-2012-my-elections .field-field-elections-f-candidates {
+        padding-top: 1em;
+        border-top: 1px solid #EBEBEB;
       }
       
       #minnpost-2012-my-elections .field-field-elections-district > .field-label {
@@ -158,11 +180,38 @@
         width: 100%;
         float: none;
       }
+      #minnpost-2012-my-elections .field-field-elections-district .field-field-elections-pvi .pvi {
+        padding: 0 1em;
+      }
       #minnpost-2012-my-elections .field-field-elections-district .field-field-elections-boundary-id {
         display: none;
       }
       #minnpost-2012-my-elections .field-field-elecitons-date {
         display: none;
+      }
+          
+      .divider-container {
+        border-top:2px solid #EBEBEB;
+        position:relative;
+        text-align:center;
+        width: 85%;
+        margin: 0 auto;
+      }
+      .divider-arrow-border {
+        border-color: #EBEBEB transparent transparent transparent;
+        border-style: solid;
+        border-width: 30px;
+        height:0;
+        width:0;
+        margin: 0 auto;
+      }
+      .divider-arrow {
+        border-color: #FFFFFF transparent transparent transparent;
+        border-style: solid;
+        border-width: 30px;
+        height:0;
+        width:0;
+        margin: -63px auto 0 auto;
       }
     </style>
     
@@ -195,17 +244,25 @@
       <div class="section results-section hide">
         <a class="goto-search" href="#search">Go back to address search.</a>
         
-        <div class="clear-block">
-          <div class="election-list-wrapper">
-            <div class="location-results-container"></div>
-            <div class="election-list-container clear-block"></div>
-            <p class="footnote">Click on race to see details and show the district on the map.</p>
+        <div class="list-block clear-block">
+          <div class="list-wrapper">
+            <div class="list-wrapper-inner">
+              <div class="location-results-container"></div>
+              <div class="election-list-container clear-block"></div>
+              <p class="footnote">Click on race to see details and show the district on the map.</p>
+            </div>
           </div>
           
           <div class="map-wrapper">
             <div class="map" id="election-map"></div>
           </div>
         </div>
+        
+        <div class="divider-container">
+          <div class="divider-arrow-border"></div>
+          <div class="divider-arrow"></div>
+        </div>
+        
         <div class="race-details-container"></div>
       </div>
       
