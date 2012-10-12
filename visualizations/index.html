@@ -60,6 +60,15 @@
         margin-top: 1em;
       }
       
+      .message-container {
+        min-height: 4em;
+        padding: .25em;
+      }
+      .message-container .messages {
+        font-size: .75em;
+        margin: 0 0 .5em 0;
+      }
+      
       .welcome-section {
         text-align: center;
         padding: 2em;
@@ -96,6 +105,19 @@
         height: 400px;
       }
       
+      #minnpost-2012-my-elections .field-field-elections-district > .field-label {
+        display: none;
+      }
+      #minnpost-2012-my-elections .field-field-elections-district .field-field-elections-pvi {
+        width: 100%;
+        float: none;
+      }
+      #minnpost-2012-my-elections .field-field-elections-district .field-field-elections-boundary-id {
+        display: none;
+      }
+      #minnpost-2012-my-elections .field-field-elecitons-date {
+        display: none;
+      }
     </style>
     
     <!--[if lte IE 8]>
@@ -106,9 +128,11 @@
     <![endif]-->
     
     <div id="minnpost-2012-my-elections">
-      <div class="messages loading hide">Loading...</div>
-      <div class="messages notice hide"></div>
-      <div class="messages error hide"></div>
+      <div class="message-container">
+        <div class="messages loading hide">Loading...</div>
+        <div class="messages notice hide"></div>
+        <div class="messages error hide"></div>
+      </div>
       
       <div class="section welcome-section">
         <noscript>
@@ -271,6 +295,7 @@
           boundaryQuery: 'http://boundaries.minnpost.com/1.0/boundary/?sets=%sets%&contains=%lat%,%lon%&callback=%callback%',
           boundarySets: 'congressional-districts-2012,counties-2010,county-commissioner-districts-2012,district-courts-2012,state-house-districts-2012,states-2011,state-senate-districts-2012',
           electionQuery: 'elections/api/election_boundary_search/%slugs%',
+          electionDetailsQuery: 'elections/api/ajax/get_election/%id%',
           mapOptions: {
             minZoom: 4,
             maxZoom: 18,
@@ -297,9 +322,10 @@
           initialize: function() {
             this.router = this.options.router;
             
-            // Determine election query
-            this.electionQuery = (w.location.hostname === 'localhost') ?
-              '/minnpost/minnpostcom/' + this.electionQuery : '/' + this.electionQuery;
+            // Determine base path
+            this.basePath = (!_.isUndefined(Drupal) && !_.isUndefined(Drupal.settings.basePath)) ? 
+              Drupal.settings.basePath :
+              ((w.location.hostname === 'localhost') ? '/minnpost/minnpostcom/' : '/');
           },
           
           show: function(location, race, open) {
@@ -311,17 +337,16 @@
               this.$el.slideDown();
             }
             
-            // Handle map
-            this.showMap();
-            
             // Check if different location
             if (location.split(',')[0] != this.lat &&
               location.split(',')[1] != this.lon) {
               this.lat = location.split(',')[0];
               this.lon = location.split(',')[1];
               
+              this.resetMap();
               this.updateCenterMap();
               this.showLocation();
+              this.resetElections();
               this.findBoundaries();
             }
             else {
@@ -360,7 +385,7 @@
             
             // Make boundary query
             slugs = _.pluck(this.boundaries, 'slug');
-            request = this.electionQuery.replace('%slugs%', encodeURI(slugs.join(',')));
+            request = this.basePath + this.electionQuery.replace('%slugs%', encodeURI(slugs.join(',')));
           
             this.router.loading('Looking for your elections...');
             $.getJSON(request, function(elections) {
@@ -390,21 +415,65 @@
               }));
           },
           
+          resetElections: function() {
+            $('.election-list-container').html('');
+          },
+          
           showElection: function() {
+            var thisView = this;
+            
             // Don't do anything if there is no race selected.
             if (!this.race) {
               return;
             }
-          
+            
+            // Get pieces
+            var e = _.find(this.elections, function(e) {  
+              return e.nid === thisView.race;
+            });
+            var b = _.find(this.boundaries, function(b) {  
+              return e.boundary === b.slug;
+            });
+            var geojson = {
+              'type': 'Feature',
+              'geometry': b.simple_shape
+            }
+            
+            // Make or change highlight
+            if (_.isObject(this.mapHighlight)) {
+              this.map.removeLayer(this.mapHighlight);
+            }
+            
+            this.mapHighlight = new L.GeoJSON(geojson);
+            this.mapHighlight.setStyle(this.mapHighlightStyle);
+            this.map.addLayer(this.mapHighlight);
+            this.map.fitBounds(this.mapHighlight.getBounds());
+            
+            // Show election
+            var request = this.basePath + this.electionDetailsQuery.replace('%id%', encodeURI(e.nid));
+            $.getJSON(request, function(data) {
+              if (data.status !== 'error') {
+                $('.race-details-container').hide().html(data.output).fadeIn();
+                customVotesaverInterfaceImprovements();
+                if (!_.isUndefined(Drupal) && _.isFunction(Drupal.attachBehaviors)) {
+                  Drupal.attachBehaviors($('.race-details-container'));
+                }
+              }
+            });
           },
           
-          showMap: function() {
+          resetMap: function() {
             if (_.isUndefined(this.map)) {
               this.map = new L.Map('election-map', this.mapOptions)
                 .addLayer(this.mapBaseTiles)
-                .setView(this.mapCenter, 6);
             }
+            
+            this.map.setView(this.mapCenter, 6);
             this.map.invalidateSize();
+            
+            if (_.isObject(this.mapHighlight)) {
+              this.map.removeLayer(this.mapHighlight);
+            }
           },
           
           updateCenterMap: function() {
@@ -448,18 +517,61 @@
           },
           
           error: function(message) {
-            $('.messages.error').html(message).slideDown().delay(3000).slideUp();
+            $('.messages.error').html(message).fadeIn().delay(3000).slideUp();
           },
           
           loading: function(message) {
             message = (_.isUndefined(message)) ? 'Loading...' : message;
-            $('.messages.loading').html(message).slideDown();
+            $('.messages.loading').html(message).fadeIn();
           },
           
           doneLoading: function(message) {
             $('.messages.loading').slideUp();
           }
         });
+        
+        // Election output gets changed with JS so we duplicate that here :(
+        var customVotesaverInterfaceImprovements = function() {
+          var pClass = 'votesaver-interface-processed';
+      
+          // Don't use context, as the context is the form when submitted
+          $('#votesaver-vote-form:not(.' + pClass + ')').each(function() {
+            $(this).addClass(pClass);
+            
+            var selector;
+            var cCount = 0;
+            var separators = 0;
+            
+            // Remove any selected notations
+            $('.votesaver-select').remove();
+            
+            // The structure of two node reference is really hard to deal with on a CSS, and JS
+            // level, so let's put them together.  This is really hacky.
+            $('<div>').addClass('candidate-container').insertBefore('.field-field-elections-district');
+            $('.field-field-elections-incumbents > .field-label')
+              .prependTo('.field-field-elections-incumbents > .field-items > .field-item:first-child');
+            $('.field-field-elections-candidates > .field-label')
+              .prependTo('.field-field-elections-candidates > .field-items > .field-item:first-child');
+            // Now take and put into the container
+            selector = '.field-field-elections-candidates > .field-items > .field-item, .field-field-elections-incumbents > .field-items > .field-item';
+            cCount = $(selector).size();
+            $('.candidate-container').addClass('grid-' + cCount);
+            $(selector).each(function() {
+              var clone = $(this).clone();
+              $(clone).appendTo('.candidate-container');
+              $(this).remove();
+              
+              // Add separator
+              if (separators < cCount - 1) {
+                $('<div>').addClass('candidate-separator').html('vs').appendTo('.candidate-container');
+              }
+              separators++;
+            });
+            
+            // Hide the regular form
+            $('#votesaver-vote-form div *:not(.messages)').hide();
+          });
+        };
           
         // When ready, make the magic happen
         $(document).ready(function() {
