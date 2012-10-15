@@ -281,7 +281,7 @@
         <div class="race-details-container"></div>
       </div>
       
-      <p class="footnote"></p>
+      <p class="footnote">Election data provided by the <a href="http://www.sos.state.mn.us/" target="_blank">MN Secretary of State</a> supplemented with MinnPost data.  Geocoding provided by <a href="http://www.mapquest.com/" target="_blank">MapQuest</a>.  Some map imagery provided by <a href="http://stamen.com" target="_blank">Stamen Design</a>.  Map data provided by <a href="http://www.openstreetmap.org/" target="_blank">OpenStreetMap</a> &copy; OpenStreetMap contributors.  District lookups provided by the <a href="http://boundaries.minnpost.com/" target="_blank">MinnPost Boundary Service</a>.</p>
     </div>
     
     <!-- Templates to be used in client side processing. -->
@@ -515,7 +515,7 @@
             var thisView = this;
             var slugs = [];
             var request = '';
-            
+            e
             // Make boundary query
             slugs = _.pluck(this.boundaries, 'slug');
             request = this.basePath + this.electionQuery.replace('%slugs%', encodeURI(slugs.join(',')));
