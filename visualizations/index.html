@@ -603,6 +603,11 @@
             $.getJSON(request, function(data) {
               thisView.router.removeMessage('Loading election details.');
               if (data.status !== 'error') {
+                // Scroll to results
+                $('html, body').animate({
+                  scrollTop: $('.divider-container').offset().top - 15
+                }, 1500);
+              
                 // Attempt to trigger Drupal behaviors
                 $('.race-details-container').hide().html(data.output).fadeIn();
                 customVotesaverInterfaceImprovements();
