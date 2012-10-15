@@ -255,7 +255,8 @@
           <li><a href="#location/44.954155,-93.1038669999999">The State Capitol</a></li>
           <li><a href="#location/44.854606,-93.242061">Mall of America</a></li>
           <li><a href="#location/47.904735,-91.827507">International Wolf Center</a></li>
-          <li><a href="#location/46.44186,-93.36129">Headwaters Science Center</a></li>
+          <li><a href="#location/47.471597,-94.880998">Headwaters Science Center</a></li>
+          <li><a href="#location/45.1353462199429,-93.2311959989981">Bachmann Campaign Office</a></li>
         </ul>
       </div>
       
@@ -430,7 +431,7 @@
           electionQuery: 'elections/api/election_boundary_search/%slugs%',
           electionDetailsQuery: 'elections/api/ajax/get_election/%id%',
           mapOptions: {
-            minZoom: 4,
+            minZoom: 5,
             maxZoom: 18,
             attributionControl: false
           },
@@ -477,10 +478,10 @@
               this.lon = location.split(',')[1];
               
               this.resetMap();
+              this.updateMarker();
               this.resetElectionDetails();
               this.resetElections();
               
-              this.updateCenterMap();
               this.showLocation();
               this.findBoundaries();
             }
@@ -488,6 +489,7 @@
               this.showElection();
             }
             else {
+              this.updateMarker();
               this.resetMap();
               this.resetElectionDetails();
             }
@@ -620,11 +622,11 @@
                   $(this).attr('href', $(this).attr('href') + '?modal=true')
                     .attr('data-fancybox-type', 'iframe');
                 }).fancybox({
-                  maxWidth: 800,
-                  maxHeight: 600,
+                  maxWidth: 960,
+                  maxHeight: 700,
                   fitToView: false,
-                  width: '70%',
-                  height: '70%',
+                  width: '80%',
+                  height: '80%',
                   autoSize: false,
                   closeClick: false,
                   openEffect: 'none',
@@ -639,8 +641,6 @@
               this.map = new L.Map('election-map', this.mapOptions)
                 .addLayer(this.mapBaseTiles)
             }
-            
-            this.map.setView(this.mapCenter, 6);
             this.map.invalidateSize();
             
             if (_.isObject(this.mapHighlight)) {
@@ -648,14 +648,18 @@
             }
           },
           
-          updateCenterMap: function() {
+          updateMarker: function() {
+            var loc = new L.LatLng(this.lat, this.lon);
+            
             if (_.isObject(this.marker)) {
-              this.marker.setLatLng(new L.LatLng(this.lat, this.lon));
+              this.marker.setLatLng(loc);
             }
             else {
-              this.marker = new L.Marker(new L.LatLng(this.lat, this.lon));
+              this.marker = new L.Marker(loc);
               this.map.addLayer(this.marker);
             }
+            
+            this.map.setView(loc, 14);
           }
         });
         
