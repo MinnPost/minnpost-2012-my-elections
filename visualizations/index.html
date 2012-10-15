@@ -264,7 +264,7 @@
             <div class="list-wrapper-inner">
               <div class="location-results-container"></div>
               <div class="election-list-container clear-block"></div>
-              <p class="footnote">Click on race to see details and show the district on the map.</p>
+              <p class="footnote">Click on a race to see details and show the district on the map.</p>
             </div>
           </div>
           
@@ -282,11 +282,12 @@
       </div>
       
       <p class="footnote">Election data provided by the <a href="http://www.sos.state.mn.us/" target="_blank">MN Secretary of State</a> supplemented with MinnPost data.  Geocoding provided by <a href="http://www.mapquest.com/" target="_blank">MapQuest</a>.  Some map imagery provided by <a href="http://stamen.com" target="_blank">Stamen Design</a>.  Map data provided by <a href="http://www.openstreetmap.org/" target="_blank">OpenStreetMap</a> &copy; OpenStreetMap contributors.  District lookups provided by the <a href="http://boundaries.minnpost.com/" target="_blank">MinnPost Boundary Service</a>.</p>
+      <p class="footnote">* Note that we are not including county level or local level races.  Please use the <a href="http://myballotmn.sos.state.mn.us/" target="_blank">MN Secretary of State's My Ballot</a> site to get a complete and official view of your races.</p>
     </div>
     
     <!-- Templates to be used in client side processing. -->
     <script id="template-location-results" type="text/template">
-      <h3>Elections for this place</h3>
+      <h3>Elections for this place*</h3>
       <% if (address) { %>
         <div class="display-address">Address: <%= address %></div>
       <% } %>
@@ -500,10 +501,10 @@
             w.boundaryCallback = function(value) {
               thisView.boundaries = value.objects;
               thisView.findElections();
-              thisView.router.removeMessage('Looking for your districts.');
+              thisView.router.removeMessage('Looking for your districts. (may take a moment)');
             };
 
-            this.router.message('Looking for your districts.');
+            this.router.message('Looking for your districts. (may take a moment)');
             $.ajax({
               url: request,
               dataType: 'script',
@@ -515,7 +516,7 @@
             var thisView = this;
             var slugs = [];
             var request = '';
-            e
+
             // Make boundary query
             slugs = _.pluck(this.boundaries, 'slug');
             request = this.basePath + this.electionQuery.replace('%slugs%', encodeURI(slugs.join(',')));
