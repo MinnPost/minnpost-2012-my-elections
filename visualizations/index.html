@@ -87,8 +87,8 @@
         font-size: 1.5em;
       }
       
-      .search-section {
-        padding: 2em;
+      .search-section-inner {
+        padding: 1em 2em 2em 2em;
       }
       .search-section form {
         width: auto;
@@ -113,6 +113,7 @@
       .goto-search {
         display: block;
         margin-bottom: 1em;
+        padding: .25em 0;
       }
       
       .display-address,
@@ -146,12 +147,13 @@
         width: 50%;
         float: left;
         list-style: none;
-        margin: 0;
+        margin: 0 0 .25em 0;
         padding: 0;
+        font-family: NimbusSanNovConD,Helvetica,Arial,Geneva,sans-serif;
       }
       .election-list-container ul li a {
         display: block;
-        padding: 0 .25em;
+        padding: .25em .5em;
       }
       .election-list-container ul li a.active {
         background-color: #EBEBEB;
@@ -260,20 +262,24 @@
       </div>
       
       <div class="section search-section hide">
-        <h3>Search for a place in Minnesota to see what is on the ballot</h3>
-        <form id="search-form" class="clear-block">
-          <input type="text" id="address-input" class="form-text" title="Try entering your address" />
-          <input type="submit" id="search-submit" class="form-submit" title="Search" value="Search" />
-        </form>
-        
-        <h4>Or try out these places:</h4>
-        <ul>
-          <li><a href="#location/44.954155,-93.1038669999999">The State Capitol</a></li>
-          <li><a href="#location/44.854606,-93.242061">Mall of America</a></li>
-          <li><a href="#location/47.904735,-91.827507">International Wolf Center</a></li>
-          <li><a href="#location/47.471597,-94.880998">Headwaters Science Center</a></li>
-          <li><a href="#location/45.1353462199429,-93.2311959989981">Bachmann Campaign Office</a></li>
-        </ul>
+        <p>We have compiled data from the <a href="http://www.sos.state.mn.us/" target="_blank">MN Secretary of State</a> for all state-wide and multiple-county level elections, and then filled in some details.</p>
+      
+        <div class="search-section-inner">
+          <h3>Search for a place in Minnesota to see what is on the ballot</h3>
+          <form id="search-form" class="clear-block">
+            <input type="text" id="address-input" class="form-text" title="Try entering your address" />
+            <input type="submit" id="search-submit" class="form-submit" title="Search" value="Search" />
+          </form>
+          
+          <h4>Or see what is on the ballot near these Minnesotan places:</h4>
+          <ul>
+            <li><a href="#location/44.954155,-93.1038669999999">The State Capitol</a></li>
+            <li><a href="#location/44.854606,-93.242061">Mall of America</a></li>
+            <li><a href="#location/47.904735,-91.827507">International Wolf Center</a></li>
+            <li><a href="#location/47.471597,-94.880998">Headwaters Science Center</a></li>
+            <li><a href="#location/45.1353462199429,-93.2311959989981">Bachmann Campaign Office</a></li>
+          </ul>
+        </div>
       </div>
       
       <div class="section results-section hide">
@@ -302,16 +308,22 @@
       </div>
       
       <p class="footnote">Election data provided by the <a href="http://www.sos.state.mn.us/" target="_blank">MN Secretary of State</a> supplemented with MinnPost data.  Geocoding provided by <a href="http://www.mapquest.com/" target="_blank">MapQuest</a>.  Some map imagery provided by <a href="http://stamen.com" target="_blank">Stamen Design</a>.  Map data provided by <a href="http://www.openstreetmap.org/" target="_blank">OpenStreetMap</a> &copy; OpenStreetMap contributors.  District lookups provided by the <a href="http://boundaries.minnpost.com/" target="_blank">MinnPost Boundary Service</a>.</p>
+      <!--
       <p class="footnote">* Note that we are not including county level or local level races.  Please use the <a href="http://myballotmn.sos.state.mn.us/" target="_blank">MN Secretary of State's My Ballot</a> site to get a complete and official view of your races.</p>
+      -->
     </div>
     
     <!-- Templates to be used in client side processing. -->
     <script id="template-location-results" type="text/template">
-      <h3>Elections for this place*</h3>
+      <h3>Elections for this place</h3>
+      
+      <div class="display-note">Note that we are not including county level or local level races.  Please use the <a href="http://myballotmn.sos.state.mn.us/" target="_blank">MN Secretary of State's My Ballot</a> site to get a complete and official view of your races.</div>
+      
       <% if (address) { %>
-        <div class="display-address">Address: <%= address %></div>
+        <div class="display-address"><%= address %></div>
       <% } %>
-      <div class="display-lat-lon">Location: <%= lat %>, <%= lon %></div>
+      
+      <div class="display-lat-lon">(<%= lat %>, <%= lon %>)</div>
     </script>
     
     <script id="template-election-list" type="text/template">
