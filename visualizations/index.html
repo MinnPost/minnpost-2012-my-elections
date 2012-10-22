@@ -269,7 +269,7 @@
             <input type="submit" id="search-submit" class="form-submit" title="Search" value="Search" />
           </form>
           
-          <h4>Or see what is on the ballot near these Minnesotan places:</h4>
+          <h4>Or, explore elections happening in these locations around the state</h4>
           <ul>
             <li><a href="#location/44.954155,-93.1038669999999">The State Capitol</a></li>
             <li><a href="#location/44.854606,-93.242061">Mall of America</a></li>
@@ -643,7 +643,8 @@
                 // Attempt to trigger Drupal behaviors
                 $('.race-details-container').hide().html(data.output).fadeIn();
                 customVotesaverInterfaceImprovements();
-                if (!_.isUndefined(Drupal) && _.isFunction(Drupal.attachBehaviors)) {
+                if (typeof Drupal != 'undefined' && !_.isUndefined(Drupal) &&
+                   _.isFunction(Drupal.attachBehaviors)) {
                   Drupal.attachBehaviors($('.race-details-container'));
                 }
                 
