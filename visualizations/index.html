@@ -262,8 +262,6 @@
       </div>
       
       <div class="section search-section hide">
-        <p>We have compiled data from the <a href="http://www.sos.state.mn.us/" target="_blank">MN Secretary of State</a> for all state-wide and multiple-county level elections, and then filled in some details.</p>
-      
         <div class="search-section-inner">
           <h3>Search for a place in Minnesota to see what is on the ballot</h3>
           <form id="search-form" class="clear-block">
@@ -290,7 +288,7 @@
             <div class="list-wrapper-inner">
               <div class="location-results-container"></div>
               <div class="election-list-container clear-block"></div>
-              <p class="footnote">Click on a race to see details and show the district on the map.</p>
+              <p class="footnote">Click on a race to see details and display the relevant district on the map.  Click on a candidates name to see more details about that candidate.</p>
             </div>
           </div>
           
@@ -485,9 +483,13 @@
             this.router = this.options.router;
             
             // Determine base path
-            this.basePath = (!_.isUndefined(Drupal) && !_.isUndefined(Drupal.settings.basePath)) ? 
-              Drupal.settings.basePath :
-              ((w.location.hostname === 'localhost') ? '/minnpost/minnpostcom/' : '/');
+            if (typeof Drupal != 'undefined' && !_.isUndefined(Drupal) && 
+              !_.isUndefined(Drupal.settings.basePath)) {
+              this.basePath = Drupal.settings.basePath;
+            }
+            else {
+              this.basePath = (w.location.hostname === 'localhost') ? '/minnpost/minnpostcom/' : '/';
+            }
           },
           
           show: function(location, race, open) {
