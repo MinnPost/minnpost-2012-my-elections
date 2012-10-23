@@ -19,13 +19,15 @@
 <meta name="viewport" content="width=device-width, initial-scale=1"></meta>
 
 
-  <link type="text/css" rel="stylesheet" media="all" href="http://www.minnpost.com/sites/default/files/css/css_c4e767d2c0649831822044ff7e6893e5.css" />
-<link type="text/css" rel="stylesheet" media="screen" href="http://www.minnpost.com/sites/default/files/css/css_6b2b28228f4e06a47e93d96b2abfeb4b.css" />
-<link type="text/css" rel="stylesheet" media="print" href="http://www.minnpost.com/sites/default/files/css/css_93f63f4f94c282fd52e692fdfd1851a4.css" />
+  <link type="text/css" rel="stylesheet" media="all" href="http://www.minnpost.com/sites/default/files/css/css_821e22b02514b6df405432d971d85dea.css" />
+<link type="text/css" rel="stylesheet" media="screen" href="http://www.minnpost.com/sites/default/files/css/css_b26ad2d81bc74f1246e9c9a4c45ecdea.css" />
+<link type="text/css" rel="stylesheet" media="print" href="http://www.minnpost.com/sites/default/files/css/css_cd72d16d00ebb27825710d934e28fbe8.css" />
   <!--[if IE]>
-      <link rel="stylesheet" href="http://www.minnpost.com/sites/default/themes/derma/inc/css/ie.css?8" type="text/css">
+      <link rel="stylesheet" href="http://www.minnpost.com/sites/default/themes/derma/inc/css/ie.css?n" type="text/css">
   <![endif]-->
-    <script type="text/javascript" src="http://www.minnpost.com/sites/default/files/js/js_f2e939afce8e5c0712d11422afe6b703.js"></script>
+    <script type="text/javascript" src="http://www.minnpost.com/sites/default/files/js/js_de97366bf2ae2bb44590e7cf73e2a6d6.js"></script>
+<script type="text/javascript" src="http://www.minnpost.com/sites/all/libraries/tinymce/jscripts/tiny_mce/tiny_mce.js?n"></script>
+
     
 
 </head>
@@ -609,7 +611,7 @@
           
           sortElections: function(e) {
             var t = e.title.toLowerCase();
-            console.log(t);
+
             if (t.indexOf('president') !== -1) { return -30; }
             else if (t.indexOf('u.s. senator') !== -1) { return -28; }
             else if (t.indexOf('u.s. representative') !== -1) { return -26; }
