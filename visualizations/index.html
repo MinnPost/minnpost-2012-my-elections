@@ -585,12 +585,28 @@
           },
           
           showElections: function() {
+            var elections = _.sortBy(this.elections, this.sortElections, this);
+            
             $('.election-list-container').html(
               _.template($('#template-election-list').html(), {
                 lat: this.lat,
                 lon: this.lon,
-                elections: this.elections
+                elections: elections
               }));
+          },
+          
+          sortElections: function(e) {
+            var t = e.title.toLowerCase();
+            console.log(t);
+            if (t.indexOf('president') !== -1) { return -30; }
+            else if (t.indexOf('u.s. senator') !== -1) { return -28; }
+            else if (t.indexOf('u.s. representative') !== -1) { return -26; }
+            else if (t.indexOf('amendment') !== -1) { return -24; }
+            else if (t.indexOf('state house') !== -1) { return -22; }
+            else if (t.indexOf('state senate') !== -1) { return -20; }
+            else if (t.indexOf('chief justice') !== -1) { return -18; }
+            else if (t.indexOf('associate justice') !== -1) { return -16; }
+            else { return 30; }
           },
           
           resetElections: function() {
