@@ -245,6 +245,17 @@
           width: 100%;
           float: none;
         }
+        .map-wrapper {
+          width: 100%;
+          float: none;
+        }
+        #election-map {
+          height: 200px;
+        }
+        .list-wrapper {
+          width: 100%;
+          float: none;
+        }
       }
     </style>
     
@@ -465,8 +476,9 @@
           electionDetailsQuery: 'elections/api/ajax/get_election/%id%',
           mapOptions: {
             minZoom: 5,
-            maxZoom: 18,
-            attributionControl: false
+            maxZoom: 17,
+            attributionControl: false,
+            scrollWheelZoom: false
           },
           mapCenter: new L.LatLng(46.49839225859763, -93.6474609375),
           mapBaseTiles: new L.TileLayer(
@@ -474,12 +486,12 @@
             { subdomains: ['a', 'b', 'c', 'd'] }
           ),
           mapHighlightStyle: {
-            'color': '#801019',
-            'weight': 3,
-            'opacity': 0.9,
-            'fill': true,
-            'fillColor': '#801019',
-            'fillOpacity': 0.5
+            color: '#801019',
+            weight: 3,
+            opacity: 0.9,
+            fill: true,
+            fillColor: '#801019',
+            fillOpacity: 0.5
           },
           
           el: '.results-section',
